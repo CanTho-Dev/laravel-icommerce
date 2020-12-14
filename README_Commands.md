@@ -25,6 +25,8 @@ docker run --rm -v ${PWD}:/app composer install
 docker-compose run --rm composer  create-project laravel/laravel laravel-icommerce
 docker-compose up -d
 docker-compose exec app php artisan key:generate
+docker-compose exec app php artisan session:table
+docker-compose exec app php artisan migrate:fresh --seed
 docker-compose down
 ```
 
