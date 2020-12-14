@@ -1,62 +1,88 @@
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# iCommerce
 
-## About Laravel
+Simple online shopping application to sell products (backend only).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- [System Design](#system-design)
+  - [1. Requirements](#1-requirements)
+  - [2. High-level design](#2-high-level-design)
+  - [3. Defining data model](#3-defining-data-model)
+    - [Product Service](#product-service)
+    - [Audit Service](#audit-service)
+    - [Shopping Cart Service](#shopping-cart-service)
+    - [Order Service](#order-service)
+  - [4. Detailed design](#4-detailed-design)
+    - [Authentication Service](#authentication-service)
+    - [API Gateway](#api-gateway)
+    - [Registry Service](#registry-service)
+    - [Product Service](#product-service)
+    - [Audit Service](#audit-service)
+    - [Shopping Cart Service](#shopping-cart-service)
+    - [Order Service](#order-service)
+- [Software development principles](#software-development-principles)
+  - [KISS (Keep It Simple Stupid)](#kiss-keep-it-simple-stupid)
+  - [YAGNI (You aren't gonna need it)](#yagni-you-arent-gonna-need-it)
+  - [Separation of Concerns](#separation-of-concerns)
+  - [DRY](#dry)
+  - [Code For The Maintainer](#code-for-the-maintainer)
+  - [Avoid Premature Optimization](#avoid-premature-optimization)
+  - [Minimise Coupling](#minimise-coupling)
+  - [Inversion of Control](#inversion-of-control)
+  - [Single Responsibility Principle](#single-responsibility-principle)
+- [Design Patterns](#design-patterns)
+- [Application default configuration](#application-default-configuration)
+- [How to run the application](#how-to-run-the-application)
+  - [Setup development workspace](#setup-development-workspace)
+  - [Run a microservice](#run-a-microservice)
+- [API Documentation](#api-documentation)
+- [Project folder structure and Frameworks, Libraries](#project-folder-structure-and-frameworks-libraries)
+  - [Project folder structure](#project-folder-structure)
+  - [Frameworks and Libraries](#frameworks-and-libraries)
+- [References](#references)
+- [Other projects](#other-projects)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## System Design
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 1. Requirements
+A small start-up named "iCommerce" wants to build a very simple online shopping application to sell their products. In order to get to the market quickly, they just want to build an MVP version with a very limited set of functionalities:
+a. The application is simply a simple web page that shows all products on which customers can filter, short and search for products based on different criteria such as name, price, brand, colour etc.
 
-## Learning Laravel
+b. All product prices are subject to change at any time and the company wants to keep track of it.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+c. If a customer finds a product that they like, they can add it to their shopping cart and proceed to place an order.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+d. For audit support, all customers' activities such as searching, filtering and viewing product's details need to be stored in the database. However, failure to store customer activity is completely transparent to customer and should have no impact to the activity itself.
 
-## Laravel Sponsors
+e. Customer can login simply by clicking the button “Login with Facebook”. No further account registration is required.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+f. No online payment is supported yet. Customer is required to pay by cash when the product got delivered.
 
-### Premium Partners
+### 2. High-level design
+At a high-level, we need some following services (or components) to handle above requirements:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/)**
-- **[OP.GG](https://op.gg)**
+![High Level Design](external-files/HighLevelDesign.png)
 
-## Contributing
+- **Product Service**: manages our products with CRUD operations. This service also provides the ability to allow user could filter, sort and search for products based on dynamic criteria.
+- **Audit Service**: records all customers activities (filtering, sorting, viewing product detail).
+- **Shopping Cart Service**: manages customers shopping carts with CRUD operations.
+- **Order Service**: manages customer orders with CRUD operations.
+- **Authentication Service**: authenticates customers, integrates with 3rd party identity platform like Facebook, Google...
+- **API Gateway**: Route requests to multiple services using a single endpoint. This service allows us to expose multiple services on a single endpoint and route to the appropriate service based on the request.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Defining data model
+In this part, we describes considerations for managing data in our architecture. For each service, we discuss data schema and datastore considerations.
 
-## Code of Conduct
+In general, we follow the basic principle of microservices is that each service manages its own data. Two services should not share a data store.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+![Wrong Datastore](external-files/datastore-microservices-wrong.png)
+#### Product Service
+The Product service stores information about all of our product. The storage requirements for the Product are:
+- Long-term storage.
+- Read-heavy (it's common for ecommerce application because the traffic from users to view, search, sort product are always much higher than the traffic from administrators to update product's information).
+- Structured data: Category, Product, Brand, ProductPriceHistory. 
+- Need complex joins (for example, in the UI, maybe we have a menu with different categories, user could choose a category and then view all products in that category, then each product will have many different variants like a T-shirt will have many different sizes and colors).
 
-## Security Vulnerabilities
+A relational database is appropriate in our case. For the simplicity of the assignment, we simplify the data schema like this:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+![Product Schema](external-files/Product.png)
